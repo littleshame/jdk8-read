@@ -381,7 +381,7 @@ public abstract class AbstractQueuedSynchronizer
         /** Marker to indicate a node is waiting in shared mode */
         static final Node SHARED = new Node();
         /** Marker to indicate a node is waiting in exclusive mode */
-        static final Node EXCLUSIVE = null;
+        static final Node EXCLUSIVE = null;     //排他模式锁等待状态
 
         /** waitStatus value to indicate thread has cancelled */
         static final int CANCELLED =  1;
@@ -859,8 +859,11 @@ public abstract class AbstractQueuedSynchronizer
         try {
             boolean interrupted = false;
             for (;;) {
+                //获取当前Node的前驱Node命名p
                 final Node p = node.predecessor();
+                //如果p为头结点（当前线程是排队线程最前面的节点），尝试获取锁
                 if (p == head && tryAcquire(arg)) {
+                    //成功获取锁，将当前线程节点作为头结点
                     setHead(node);
                     p.next = null; // help GC
                     failed = false;
