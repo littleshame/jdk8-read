@@ -204,7 +204,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          */
         final void lock() {
             if (compareAndSetState(0, 1))
-                setExclusiveOwnerThread(Thread.currentThread());
+                setExclusiveOwnerThread(Thread.currentThread());    //设置该锁的占用线程为当前线程
             else
                 acquire(1);
         }
