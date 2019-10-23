@@ -43,7 +43,11 @@ import java.util.function.Function;
  * unsynchronized and permits nulls.)  This class makes no guarantees as to
  * the order of the map; in particular, it does not guarantee that the order
  * will remain constant over time.
- *
+ * 
+ * hash表 继承了 <Map>接口，此实现提供了所有可选的Map操作，并且允许 key为null 和 value 为 null
+ * 忽略HashMap的非线程安全和允许null值，HashMap 和 HashTable差不太多。
+ * 此类无法保证表的顺序，特别的，它无法保证顺序一直不变
+ * 
  * <p>This implementation provides constant-time performance for the basic
  * operations (<tt>get</tt> and <tt>put</tt>), assuming the hash function
  * disperses the elements properly among the buckets.  Iteration over
@@ -52,6 +56,13 @@ import java.util.function.Function;
  * of key-value mappings).  Thus, it's very important not to set the initial
  * capacity too high (or the load factor too low) if iteration performance is
  * important.
+ * 
+ * 此实现提供了一个常量时间的基础操作（get/set)，假设哈希函数正确地将元素分散到各个bucket中。
+ * 迭代结束
+ * 收集视图所需的时间与
+ * <tt>hashmap</tt>实例（存储桶数）加上其大小（键值映射数）
+ * 因此，如果迭代性能很重要，那么不要将初始容量设置得太高（或者负载因子设置得太低），这是非常重要的
+ * 
  *
  * <p>An instance of <tt>HashMap</tt> has two parameters that affect its
  * performance: <i>initial capacity</i> and <i>load factor</i>.  The
@@ -332,9 +343,27 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * cheapest possible way to reduce systematic lossage, as well as
      * to incorporate impact of the highest bits that would otherwise
      * never be used in index calculations because of table bounds.
-     */
+     * 换算下 key.hashCode() 的值，通过异或运算（XORs) 使高位扩散到低位。
+     * 由于存储元素的table数组，采用的是 2 的次方的长度，并且以此作为下标取值掩码。
+     * 那么对于，只有高于当前掩码长度的位会变化的 hash 来说，计算出来数组下标就会
+     * 全部冲突
+     * 其中一种已知的一种情况是 Float 作为 key，并且按照自然数顺序递增的存入一个小
+     * 尺寸的table数组中，因此我们利用一种转换，来把高位的变化性扩散的低位去。
+     * 这是基于速度，效用和位扩散品质的一种权衡方案。
+     *因为许多常见的 hash 值都是适度分散的（因此位扩散的收益不大），又因为
+     * 我们使用树，来管控大数量的冲突元素。使用XOR异或运算来移位，可以尽可能低成本地
+     * 减少系统性损耗，也将原本不参与数组下标计算的高位的也给包含进来了。
+     *
+     * 作者：抽大麻的兔子
+     *   链接：https://www.zhihu.com/question/62923854/answer/204445142
+     *   来源：知乎
+     *   著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+     **/
     static final int hash(Object key) {
         int h;
+        // >>> 无符号右移，高位直接补零
+        // 64位计算机 int类型为4个字节32位，
+        // 这个操作就是低16位的值 = 高16位 ^ 低16位
         return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     }
 
@@ -626,7 +655,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         Node<K,V>[] tab; Node<K,V> p; int n, i;
         if ((tab = table) == null || (n = tab.length) == 0)//初始化容器
             n = (tab = resize()).length;
-        if ((p = tab[i = (n - 1) & hash]) == null)//table中元素为空则放入元素
+            //注意 数组下表时如何获取的
+        if ((p = tab[i = (n - 1) & hash]) == null) //table中元素为空则放入元素
             tab[i] = newNode(hash, key, value, null);
         else {
             Node<K,V> e; K k;

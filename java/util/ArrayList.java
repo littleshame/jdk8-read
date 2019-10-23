@@ -218,8 +218,9 @@ public class ArrayList<E> extends AbstractList<E>
             ensureExplicitCapacity(minCapacity);
         }
     }
-
+    //minCapacity 最小也得是size+1
     private void ensureCapacityInternal(int minCapacity) {
+        //如果容器刚初始化，扩容至10 或者 minCapacity
         if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
             minCapacity = Math.max(DEFAULT_CAPACITY, minCapacity);
         }
@@ -228,9 +229,10 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     private void ensureExplicitCapacity(int minCapacity) {
-        modCount++;
+        modCount++;     //修改次数+1
 
         // overflow-conscious code
+        //所需容量超过了数组长度才需要扩容
         if (minCapacity - elementData.length > 0)
             grow(minCapacity);
     }
@@ -252,7 +254,11 @@ public class ArrayList<E> extends AbstractList<E>
     private void grow(int minCapacity) {
         // overflow-conscious code
         int oldCapacity = elementData.length;
-        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        int newCapacity = oldCapacity + (oldCapacity >> 1);    //扩容1.5倍
+        //真奇怪，ensureExplicitCapacity调用了grow，既然能进grow，
+        //说明minCapacity - elementData.length > 0是一定的，
+        //为什么还要判断？
+        //可能是为了函数扩展，以后grow可能被其他函数调用，不要相信参数？
         if (newCapacity - minCapacity < 0)
             newCapacity = minCapacity;
         if (newCapacity - MAX_ARRAY_SIZE > 0)
@@ -455,6 +461,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @return <tt>true</tt> (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
+        //确保容器空间足够
         ensureCapacityInternal(size + 1);  // Increments modCount!!
         elementData[size++] = e;
         return true;
